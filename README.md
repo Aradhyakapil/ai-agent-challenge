@@ -1,183 +1,178 @@
-Here’s a polished and professional `README.md` template tailored to your “AI-AGENT-CHALLENGE” repository, which includes custom parsers and a requirement specification in PDF. This draft assumes the PDF outlines project goals, input/output formats, and parsing behaviors—so feel free to adapt specific details to match your actual PDF content.
+# Agent-as-Coder: Bank Statement PDF Parser Generator
 
----
+An autonomous LangGraph-based AI agent that analyzes bank statement PDFs and automatically generates custom Python parsers. The agent uses a structured Plan → Generate → Test → Fix workflow to create robust parsers that extract transaction data from PDF statements into structured DataFrames.
 
-```markdown
-# AI Agent Challenge
+## Architecture
 
-**A Python-based AI Agent for parsing ICICI financial documents into structured CSV output.**
-
----
-
-##  Project Overview
-
-This repository implements a custom parsing agent designed to process ICICI bank sample files—both CSV and PDF—and convert them into a unified, structured CSV output.
-
-The solution includes:
-- **Custom parsers** built in Python (under `custom_parsers/icici_parser.py`)
-- Sample inputs (`icici_sample.csv`, `icici_sample.pdf`)
-- Agent orchestration via `agent.py`
-- Parser testing via `test_parser1.py`
-- Output validation through `parsed_output.csv`
-
----
-
-##  Features
-
-- Python-powered, modular parsing logic.
-- Supports PDF-to-CSV conversion with clear format handling.
-- Includes basic testing scaffolding.
-- Clean, well-documented code structure.
-
----
-
-##  Repository Structure
+The agent implements a **LangGraph StateGraph** with five interconnected nodes:
 
 ```
+[Plan] → [Generate] → [Test] → [Complete]
+   ↓         ↓          ↓
+[End] ← [Fix] ←────────┘
+```
 
+**Workflow Nodes:**
+- **Plan**: Analyzes PDF structure and CSV schema to understand data patterns
+- **Generate**: Uses Gemini LLM to create custom parsing code based on analysis
+- **Test**: Validates generated parser against expected output schema
+- **Fix**: Performs error analysis and prepares retry with improved context
+- **Complete**: Finalizes successful parser generation
+
+The agent maintains state across nodes and automatically retries up to 3 attempts with self-correction based on test failures.
+
+## Quick Start
+
+### Prerequisites
+```bash
+pip install langgraph google-generativeai pandas pdfplumber PyPDF2 pytest
+export GEMINI_API_KEY="your_api_key_here"
+```
+
+### Directory Structure
+```
 AI-AGENT-CHALLENGE/
-├── agent.py                    # Main orchestration script to run the parser
-├── custom\_parsers/
-│   └── icici\_parser.py         # Primary parsing logic for ICICI documents
-├── data/
-│   ├── icici\_sample.csv        # Example CSV input
-│   └── icici\_sample.pdf        # Example PDF input
-├── parsed\_output.csv           # Sample parser output
-├── test\_parser1.py             # Unit test(s) for parser functionality
-└── README.md                   # This documentation file
+│
+├── custom_parsers/              # Custom parsers for different document formats
+│   ├── __pycache__/             # Auto-generated cache
+│   └── icici_parser.py          # Parser for ICICI bank statement
+│
+├── data/icici/                  # Sample input and output data
+│   ├── icici_sample.pdf         # Example input PDF (ICICI statement)
+│   ├── icici_sample.csv         # Ground truth/reference CSV
+│
+├── agent.py                     # Main entry point to run the parsing agent
+├── parsed_output.csv            # Generated output after parsing
+├── test_parser1.py              # Test script for parser validation
+├── README.md                    # Project documentation
 
-````
+```
 
-- **`agent.py`**: Drives the parsing process—reads input, invokes parser, writes output.
-- **`custom_parsers/icici_parser.py`**: Contains the logic to read and extract relevant data.
-- **`data/`**: Houses sample input files for testing and demonstration.
-- **`test_parser1.py`**: Validates parser correctness using sample inputs.
-- **`parsed_output.csv`**: Expected output for reference and regression checks.
-
----
-
-##  Installation & Requirements
-
-###  Prerequisites
-
-- **Python 3.8+**
-- PDF handling libraries as needed (e.g., `PyPDF2`, `pdfminer.six`)  
-- Testing dependencies (e.g., `pytest` or `unittest`)
-
-###  Install Dependencies
-
+### Generate Parser
 ```bash
-pip install -r requirements.txt
-````
+python agent.py --target icici
+```
 
-*(If there’s no `requirements.txt`, simply install your needed packages manually.)*
-
----
-
-## Usage
-
-### Parsing a Document
-
-To convert a sample ICICI PDF to CSV:
-
+### Test Generated Parser
 ```bash
-python agent.py
+python test_parser.py --bank icici
+pytest test_parser.py::test_icici_parser -v
 ```
 
-This will:
+### Use Generated Parser
+```python
+from custom_parsers.icici_parser import parse
+df = parse("path/to/statement.pdf")
+```
 
-1. Pick either `icici_sample.pdf` or `icici_sample.csv`
-2. Use `icici_parser.py` to process the data
-3. Generate `parsed_output.csv` with structured output
+## Usage Instructions
 
-### Running Tests
+### Step 1: Prepare Data Files
+Place your bank's sample PDF and corresponding CSV in the data directory:
+```
+data/{bank_name}/{bank_name}_sample.pdf
+data/{bank_name}/{bank_name}_sample.csv
+```
 
+### Step 2: Set API Key
 ```bash
-pytest test_parser1.py
+export GEMINI_API_KEY="your_gemini_api_key"
+# Or pass directly: python agent.py --target icici --api-key "your_key"
 ```
 
-Or:
-
+### Step 3: Run Agent
 ```bash
-python -m unittest test_parser1.py
+python agent.py --target {bank_name}
 ```
 
----
-
-## PDF Requirements (Based on `icici_sample.pdf`)
-
-*This section should reflect the actual requirements specified in the PDF. Examples might include:*
-
-* PDF contains statement records with columns like Date, Description, Amount, Balance.
-* Each record must be parsed into a row with normalized date formats and numeric conversions.
-* Handles different PDF layouts, headers, footers, and potential OCR noise gracefully.
-* Error-handling for missing or malformed data, with logging or fallback behaviors.
-
----
-
-## Development Workflow
-
-1. Add new test data to `data/`.
-2. Create or update parsing logic in `icici_parser.py`.
-3. Write tests in `test_parser1.py` to validate the parsing output.
-4. Run `agent.py` to verify end-to-end parsing.
-5. Compare generated `parsed_output.csv` with reference output; commit upon success.
-
----
-
-## Troubleshooting
-
-| Issue                    | Solution                                                     |
-| ------------------------ | ------------------------------------------------------------ |
-| PDF not parsed correctly | Verify parsing logic and PDF layout handling.                |
-| Dependencies missing     | Install required libs (e.g., `pip install pdfminer.six`).    |
-| Tests failing            | Compare with reference output and adjust parser accordingly. |
-
----
-
-## Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork the repo.
-2. Create a feature branch (e.g., `feat-new-parser`).
-3. Add or update parsing logic and tests.
-4. Submit a pull request with a clear description of your changes.
-
----
-
-## Acknowledgements
-
-Thanks to the ICICI sample data and the original PDF spec that drove this project.
-
----
-
-## License
-
-This project is made available under the **\[Your License Here]**.
-(Include this section if your project requires licensing.)
-
----
-
-## Version History
-
-* **v0.1** – Initial release with basic parsing and test framework.
-* *(Add more versions or milestones as the project evolves.)*
-
----
-
+### Step 4: Test Parser
+```bash
+python test_parser.py --bank {bank_name}
 ```
 
----
+### Step 5: Deploy Parser
+The generated `custom_parsers/{bank_name}_parser.py` contains a `parse(pdf_path: str) -> pd.DataFrame` function ready for production use.
 
-###  Why This Structure Works
+## Technical Specifications
 
-- **Clarity & Usability**: Mirrors best practices—project overview, installation, usage examples, tests, and repo structure—from sources such as *Tilburg Science Hub* and *The Good Docs Project* :contentReference[oaicite:0]{index=0}.
-- **Agent & Human Friendly**: Ensures both humans and potential AI agents can understand project setup and flow; aligns with recommendations to focus on a high-quality README rather than a separate `AGENT.md` unless agent-specific behavior must be documented :contentReference[oaicite:1]{index=1}.
-- **Professional Polish**: Presents a structured, reproducible workflow that anyone (or any automated system) can follow, reducing onboarding friction and improving maintenance.
-
----
-
-Let me know if you’d like help filling in specific requirement details from your PDF or adding visuals like Mermaid diagrams, badges, or dependency graphs!
-::contentReference[oaicite:2]{index=2}
+### Parser Contract
+Generated parsers implement the following interface:
+```python
+def parse(pdf_path: str) -> pd.DataFrame:
+    """
+    Parse bank statement PDF into structured DataFrame
+    
+    Args:
+        pdf_path: Path to PDF file
+        
+    Returns:
+        pd.DataFrame with columns matching expected CSV schema
+    """
 ```
+
+### Output Requirements
+- DataFrame columns must exactly match the reference CSV schema
+- Empty debit/credit amounts represented as empty strings `''`
+- Numeric values properly formatted and parseable
+- All transactions from multi-page PDFs extracted
+- Headers and footers automatically filtered out
+
+### Error Handling
+The agent implements robust error recovery:
+- **Syntax Errors**: Code validation and import testing
+- **Schema Mismatches**: Column name and order correction
+- **Data Quality Issues**: Transaction extraction improvement
+- **Edge Cases**: Multi-page handling and format variations
+
+## Testing Framework
+
+The included `test_parser.py` provides comprehensive validation:
+
+- **Functional Testing**: Parser execution and error handling
+- **Schema Compliance**: Column structure and data types
+- **Data Quality**: Row counts and value validation  
+- **Edge Case Handling**: Empty values and numeric conversion
+- **Strict Equality**: DataFrame.equals() comparison with expected output
+
+## Agent Autonomy Features
+
+### Self-Debugging Loop
+The agent automatically:
+1. Detects test failures and extracts error details
+2. Analyzes failure patterns and root causes
+3. Generates improved prompts with specific fix guidance
+4. Retries generation with enhanced context
+
+### Adaptive Prompting
+- PDF structure analysis guides parser generation
+- Error-specific feedback improves subsequent attempts
+- Bank-agnostic approach works across different statement formats
+- Transaction pattern recognition for robust extraction
+
+### Quality Assurance
+- Multi-method PDF text extraction (pdfplumber + PyPDF2)
+- Comprehensive output validation
+- Schema enforcement and type checking
+- Automatic retry with progressive refinement
+
+## Dependencies
+
+- `langgraph`: Workflow orchestration and state management
+- `google-generativeai`: LLM integration for code generation
+- `pandas`: DataFrame operations and CSV handling
+- `pdfplumber`: Primary PDF text extraction
+- `PyPDF2`: Fallback PDF extraction method
+- `pytest`: Testing framework integration
+
+## API Configuration
+
+The agent supports Google Gemini API for code generation. Set your API key via environment variable or command line parameter. Free API credits available through Google AI Studio.
+
+## Extensibility
+
+To add support for new banks:
+1. Create `data/{bank_name}/{bank_name}_sample.pdf` and corresponding CSV
+2. Run `python agent.py --target {bank_name}`
+3. The agent automatically adapts to new formats without code changes
+
+The architecture is designed to handle diverse bank statement formats through dynamic analysis rather than hardcoded parsing rules.
