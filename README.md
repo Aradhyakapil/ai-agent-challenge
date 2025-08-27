@@ -40,7 +40,7 @@ AI-AGENT-CHALLENGE/
 │
 ├── agent.py                     # Main entry point to run the parsing agent
 ├── parsed_output.csv            # Generated output after parsing
-├── test_parser1.py              # Test script for parser validation
+├── test_parser.py              # Test script for parser validation
 ├── README.md                    # Project documentation
 
 ```
