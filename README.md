@@ -1,3 +1,5 @@
+#DEMO
+https://github.com/user-attachments/assets/a203e166-c6f5-436c-9ada-29f75141b442
 # Agent-as-Coder: Bank Statement PDF Parser Generator
 
 An autonomous LangGraph-based AI agent that analyzes bank statement PDFs and automatically generates custom Python parsers. The agent uses a structured Plan → Generate → Test → Fix workflow to create robust parsers that extract transaction data from PDF statements into structured DataFrames.
