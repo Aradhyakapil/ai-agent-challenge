@@ -6,11 +6,8 @@ An autonomous LangGraph-based AI agent that analyzes bank statement PDFs and aut
 
 The agent implements a **LangGraph StateGraph** with five interconnected nodes:
 
-```
-[Plan] → [Generate] → [Test] → [Complete]
-   ↓         ↓          ↓
-[End] ← [Fix] ←────────┘
-```
+<img width="674" height="681" alt="image" src="https://github.com/user-attachments/assets/137151ae-c553-4ca5-afb9-1704edd0409f" />
+
 
 **Workflow Nodes:**
 - **Plan**: Analyzes PDF structure and CSV schema to understand data patterns
